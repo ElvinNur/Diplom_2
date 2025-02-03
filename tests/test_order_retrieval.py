@@ -1,35 +1,16 @@
 import requests
 import pytest
 import allure
+from config import GET_ORDERS_URL
 
 class TestGetUserOrders:
-    BASE_URL = "https://stellarburgers.nomoreparties.site"
-    LOGIN_URL = f"{BASE_URL}/api/auth/login"
-    GET_ORDERS_URL = f"{BASE_URL}/api/orders"
-
-    @pytest.fixture
-    def valid_user(self):
-        """Данные существующего пользователя."""
-        return {
-            "email": "eldiablo@yandex.ru",
-            "password": "password123"
-        }
-
-    @pytest.fixture
-    def headers(self, valid_user):
-        """Получение заголовков авторизации."""
-        with allure.step("Авторизация пользователя и получение токена"):
-            login_response = requests.post(self.LOGIN_URL, json=valid_user)
-            assert login_response.status_code == 200, f"Login failed: {login_response.text}"
-            access_token = login_response.json()["accessToken"]
-            return {"Authorization": access_token}
 
     @allure.title("Получение заказов с авторизацией")
     @allure.description("Тест проверяет успешное получение заказов авторизованного пользователя.")
     def test_get_orders_with_auth(self, headers):
         """Тест получения заказов с авторизацией."""
         with allure.step("Отправка запроса на получение заказов"):
-            response = requests.get(self.GET_ORDERS_URL, headers=headers)
+            response = requests.get(GET_ORDERS_URL, headers=headers)
 
         with allure.step("Проверка ответа от сервера"):
             # Проверяем успешный ответ
@@ -48,7 +29,7 @@ class TestGetUserOrders:
     def test_get_orders_without_auth(self):
         """Тест получения заказов без авторизации."""
         with allure.step("Отправка запроса на получение заказов без токена авторизации"):
-            response = requests.get(self.GET_ORDERS_URL)
+            response = requests.get(GET_ORDERS_URL)
 
         with allure.step("Проверка ответа от сервера"):
             # Проверяем, что сервер вернул ошибку

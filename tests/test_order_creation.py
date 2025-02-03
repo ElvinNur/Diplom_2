@@ -1,43 +1,20 @@
 import requests
 import pytest
 import allure
+from config import ORDER_CREATION_URL
+from data import VALID_INGREDIENTS
 
 class TestOrderCreation:
-    BASE_URL = "https://stellarburgers.nomoreparties.site"
-    LOGIN_URL = f"{BASE_URL}/api/auth/login"
-    ORDER_CREATION_URL = f"{BASE_URL}/api/orders"
-
-    @pytest.fixture
-    def valid_user(self):
-        """Параметры для уже существующего пользователя."""
-        return {
-            "email": "eldiablo@yandex.ru",
-            "password": "password123"
-        }
-
-    @pytest.fixture
-    def headers(self, valid_user):
-        """Получение заголовков авторизации."""
-        with allure.step("Авторизация пользователя и получение токена"):
-            login_response = requests.post(self.LOGIN_URL, json=valid_user)
-            assert login_response.status_code == 200, f"Login failed: {login_response.text}"
-            access_token = login_response.json()["accessToken"]
-            return {"Authorization": access_token}
-
-    @pytest.fixture
-    def valid_ingredients(self):
-        """Список валидных ингредиентов."""
-        return ["61c0c5a71d1f82001bdaaa6d", "61c0c5a71d1f82001bdaaa6f"]
 
     @allure.title("Создание заказа с авторизацией")
     @allure.description("Тест проверяет успешное создание заказа с авторизацией.")
-    def test_create_order_with_auth(self, headers, valid_ingredients):
+    def test_create_order_with_auth(self, headers):
         """Тест создания заказа с авторизацией."""
         with allure.step("Подготовка данных для заказа"):
-            payload = {"ingredients": valid_ingredients}
+            payload = {"ingredients": VALID_INGREDIENTS}
 
         with allure.step("Отправка запроса на создание заказа"):
-            response = requests.post(self.ORDER_CREATION_URL, json=payload, headers=headers)
+            response = requests.post(ORDER_CREATION_URL, json=payload, headers=headers)
 
         with allure.step("Проверка успешного ответа"):
             assert response.status_code == 200, f"Order create failed: {response.text}"
@@ -49,13 +26,12 @@ class TestOrderCreation:
 
     @allure.title("Создание заказа без авторизации")
     @allure.description("Тест проверяет, что заказ без авторизации невозможен.")
-    def test_create_order_without_auth(self, valid_ingredients):
-        """Тест обновления данных пользователя без авторизации."""
+    def test_create_order_without_auth(self):
         with allure.step("Подготовка данных для заказа"):
-            payload = {"ingredients": valid_ingredients}
+            payload = {"ingredients": VALID_INGREDIENTS}
 
         with allure.step("Отправка запроса на создание заказа без авторизации"):
-            response = requests.post(self.ORDER_CREATION_URL, json=payload)
+            response = requests.post(ORDER_CREATION_URL, json=payload)
 
         with allure.step("Проверка ответа на отсутствие авторизации"):
             assert response.status_code == 401, f"Unexpected status code: {response.status_code}"
@@ -75,7 +51,7 @@ class TestOrderCreation:
             payload = {"ingredients": invalid_ingredient}
 
         with allure.step("Отправка запроса на создание заказа"):
-            response = requests.post(self.ORDER_CREATION_URL, json=payload, headers=headers)
+            response = requests.post(ORDER_CREATION_URL, json=payload, headers=headers)
 
         with allure.step("Проверка ответа на некорректный ингредиент"):
             assert response.status_code == 500, f"Order create failed: {response.text}"
@@ -85,7 +61,7 @@ class TestOrderCreation:
     def test_create_order_without_ingredients(self, headers):
         """Тест создания заказа без указания ингредиентов."""
         with allure.step("Отправка запроса на создание заказа без ингредиентов"):
-            response = requests.post(self.ORDER_CREATION_URL, headers=headers)
+            response = requests.post(ORDER_CREATION_URL, headers=headers)
 
         with allure.step("Проверка ответа на отсутствие ингредиентов"):
             assert response.status_code == 400, f"Order create failed: {response.text}"
@@ -104,7 +80,7 @@ class TestOrderCreation:
             payload = {"ingredients": ["61c0c5a71d1f82001bdaaa6d"]}
 
         with allure.step("Отправка запроса на создание заказа"):
-            response = requests.post(self.ORDER_CREATION_URL, json=payload, headers=headers)
+            response = requests.post(ORDER_CREATION_URL, json=payload, headers=headers)
 
         with allure.step("Проверка успешного ответа"):
             assert response.status_code == 200, f"Order create failed: {response.text}"

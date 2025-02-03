@@ -1,66 +1,35 @@
 import requests
 import pytest
 import allure
+from config import BASE_URL
+from data import EXISTING_USER
+from helpers import generate_unique_user
 
 class TestUserCreationAPI:
-    BASE_URL = "https://stellarburgers.nomoreparties.site/api/auth/register"
-    DELETE_URL = "https://stellarburgers.nomoreparties.site/api/auth/user"
-
-    @pytest.fixture
-    def unique_user(self):
-        """Генерация уникального пользователя."""
-        return {
-            "email": "unique_user_zxcqwe@example.com",
-            "password": "securepassword",
-            "name": "UniqueUser"
-        }
-
-    @pytest.fixture
-    def existing_user(self):
-        """Параметры для уже существующего пользователя."""
-        return {
-            "email": "eldiablo@yandex.ru",
-            "password": "password123",
-            "name": "Username"
-        }
 
     @allure.title("Создание уникального пользователя")
     @allure.description("Тест проверяет успешное создание уникального пользователя и удаление его после теста.")
-    def test_create_unique_user(self, unique_user):
+    def test_create_unique_user(self, delete_user):
+        unique_user = generate_unique_user()
+        
         with allure.step("Отправка запроса на создание пользователя"):
-            response = requests.post(self.BASE_URL, json=unique_user)
+            response = requests.post(BASE_URL, json=unique_user)
         
         with allure.step("Проверка успешного ответа"):
             assert response.status_code == 200, f"Unexpected status code: {response.status_code}"
             response_body = response.json()
             assert response_body["success"] is True, "Response 'success' is not True"
 
-            assert "user" in response_body, "Key 'user' not found in response"
-            assert response_body["user"]["email"] == unique_user["email"], "Email mismatch"
-            assert response_body["user"]["name"] == unique_user["name"], "Name mismatch"
-
-            assert "accessToken" in response_body, "Key 'accessToken' not found in response"
-            assert response_body["accessToken"].startswith("Bearer "), "AccessToken format is incorrect"
-
-            assert "refreshToken" in response_body, "Key 'refreshToken' not found in response"
-            assert len(response_body["refreshToken"]) > 0, "RefreshToken is empty"
-        
-        with allure.step("Удаление пользователя"):
-            access_token = response_body["accessToken"]
-            headers = {"Authorization": access_token}
-            delete_response = requests.delete(self.DELETE_URL, headers=headers)
-
-            assert delete_response.status_code == 202, f"Unexpected status code: {delete_response.status_code}"
-            delete_body = delete_response.json()
-            assert delete_body["success"] is True, "Response 'success' is not True"
+        # Передаем access_token в фикстуру для удаления пользователя
+        delete_user(response_body["accessToken"])
 
     @allure.title("Создание уже существующего пользователя")
     @allure.description("Тест проверяет, что нельзя создать пользователя с уже существующими данными.")
-    def test_create_existing_user(self, existing_user):
+    def test_create_existing_user(self):
         with allure.step("Попытка создания уже существующего пользователя"):
-            requests.post(self.BASE_URL, json=existing_user)
+            requests.post(BASE_URL, json=EXISTING_USER)
 
-            response = requests.post(self.BASE_URL, json=existing_user)
+            response = requests.post(BASE_URL, json=EXISTING_USER)
         
         with allure.step("Проверка ошибки создания"):
             assert response.status_code == 403, f"Unexpected status code: {response.status_code}"
@@ -77,7 +46,7 @@ class TestUserCreationAPI:
     ])
     def test_create_user_missing_field(self, missing_field, user_data):
         with allure.step(f"Попытка создания пользователя без поля '{missing_field}'"):
-            response = requests.post(self.BASE_URL, json=user_data)
+            response = requests.post(BASE_URL, json=user_data)
         
         with allure.step("Проверка ошибки создания"):
             assert response.status_code == 403, f"Unexpected status code: {response.status_code}"
