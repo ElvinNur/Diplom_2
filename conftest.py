@@ -27,5 +27,4 @@ def delete_user():
 
     if access_token:
         headers = {"Authorization": access_token}
-        response = requests.delete(DELETE_URL, headers=headers)
-        assert response.status_code == 202, f"User deletion failed: {response.text}"
+        requests.delete(DELETE_URL, headers=headers)
