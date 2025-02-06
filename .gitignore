@@ -1,0 +1,22 @@
+venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+
+# Исключить папку allure-results
+allure-results/
+
+# Исключить временные файлы Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Исключить системные файлы IDE
+.idea/
+.vscode/
+
+# Исключить системные файлы OS
+.DS_Store
+Thumbs.db
